@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Profesional de Gestión de Inventario</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Dashboard Visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-500 p-2 rounded-lg text-white">
+                        <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">StockMaster Pro</h1>
+                        <p class="text-xs text-slate-400">Gestión e Inventarios</p>
+                    </div>
+                </div>
+
+                <!-- Status & Sync Badge -->
+                <div class="flex items-center space-x-3">
+                    <div id="syncStatus" class="flex items-center text-xs px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" id="statusDot"></span>
+                        <span id="statusText">Modo Local / Sincronizado</span>
+                    </div>
+                    <button onclick="openConfigModal()" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition" title="Configurar Firebase">
+                        <i class="fa-solid fa-gear text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1.5 shadow-sm border">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('products')" id="tab-products" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Inventario</span>
+            </button>
+            <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Historial de Movimientos</span>
+            </button>
+        </div>
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="space-y-6">
+            <!-- Summary KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Card 1 -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-blue-50 text-brand-600 rounded-xl">
+                        <i class="fa-solid fa-box text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Productos</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-products">0</h3>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <i class="fa-solid fa-sack-dollar text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Valor del Inventario</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-value">$0.00</h3>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Stock Bajo</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-low-stock">0</h3>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                        <i class="fa-solid fa-tags text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Categorías</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-categories">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts & Low Stock Alerts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Stock Level Chart -->
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-brand-500"></i> Stock por Categoría
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Alert Panel for Low Stock -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-bell text-amber-500"></i> Alertas de Stock Bajo
+                        </h3>
+                        <span id="lowStockBadge" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto max-h-64 custom-scrollbar pr-1" id="lowStockList">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: PRODUCTS MANAGEMENT -->
+        <div id="view-products" class="hidden space-y-6">
+            <!-- Top Controls Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+                <!-- Search & Filters -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="renderProductsTable()" placeholder="Buscar por Nombre o SKU..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <select id="categoryFilter" onchange="renderProductsTable()" class="py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                        <option value="ALL">Todas las Categorías</option>
+                    </select>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="openProductModal()" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 shadow transition">
+                    <i class="fa-solid fa-plus"></i> Nuevo Producto
+                </button>
+            </div>
+
+            <!-- Products Table Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('sku')">SKU / Código <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('name')">Producto <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('category')">Categoría <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition text-right" onclick="toggleSort('price')">Precio <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 sm:p-4 text-center">Stock</th>
+                                <th class="p-3 sm:p-4 text-center">Ajuste Rápido</th>
+                                <th class="p-3 sm:p-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody" class="divide-y divide-slate-100">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: MOVEMENTS / LOGS -->
+        <div id="view-movements" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-brand-500"></i> Registro de Actividades y Movimientos
+                    </h3>
+                    <button onclick="clearMovementsLog()" class="text-xs text-rose-600 hover:text-rose-800 border border-rose-200 px-3 py-1 rounded hover:bg-rose-50 transition">
+                        Limpiar Historial
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Fecha y Hora</th>
+                                <th class="p-3">Producto</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3 text-right">Cantidad</th>
+                                <th class="p-3">Detalle / Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movementsTableBody" class="divide-y divide-slate-100">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: CREATE / EDIT PRODUCT -->
+    <div id="productModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in duration-150">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Nuevo Producto</h3>
+                <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="productForm" onsubmit="handleProductSubmit(event)" class="space-y-4">
+                <input type="hidden" id="productId">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre del Producto</label>
+                    <input type="text" id="prodName" required placeholder="Ej: Laptop Lenovo ThinkPad" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">SKU / Código</label>
+                        <input type="text" id="prodSku" required placeholder="SKU-1001" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría</label>
+                        <input type="text" id="prodCategory" required placeholder="Ej: Electrónica" list="categorySuggestions" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <datalist id="categorySuggestions"></datalist>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Precio ($)</label>
+                        <input type="number" step="0.01" min="0" id="prodPrice" required placeholder="0.00" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Actual</label>
+                        <input type="number" min="0" id="prodStock" required placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Mínimo</label>
+                        <input type="number" min="0" id="prodMinStock" required placeholder="5" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-3 border-t">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 text-sm font-medium hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium shadow">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: FIREBASE CONFIG -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-fire text-amber-500"></i> Configuración de Firebase
+                </h3>
+                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Pega tu configuración de Firebase (objeto JSON o variables) para activar la sincronización en la nube en tiempo real.</p>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-600 uppercase mb-1">Configuración Firebase JSON</label>
+                    <textarea id="firebaseConfigJson" rows="6" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "tu-app.firebaseapp.com",
+  "projectId": "tu-app",
+  "storageBucket": "tu-app.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}' class="w-full p-3 font-mono border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 flex justify-between items-center border-t">
+                <button onclick="resetFirebaseConfig()" class="text-xs text-rose-600 hover:underline">Desconectar Firebase</button>
+                <div class="flex space-x-2">
+                    <button onclick="closeConfigModal()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-slate-600 text-xs font-medium">Cerrar</button>
+                    <button onclick="saveFirebaseConfig()" class="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-medium shadow">Guardar y Sincronizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script class="script">
+        // Global App State
+        let products = [];
+        let movements = [];
+        let currentSortField = 'name';
+        let currentSortAsc = true;
+        let chartInstance = null;
+
+        // Firebase State
+        let db = null;
+        let auth = null;
+        let isFirebaseConnected = false;
+
+        // Demo Fallback Initial Data
+        const defaultProducts = [
+            { id: '1', name: 'Monitor Gamer 27" 144Hz', sku: 'MON-27-01', category: 'Monitores', price: 280.00, stock: 12, minStock: 5 },
+            { id: '2', name: 'Teclado Mecánico RGB', sku: 'TEC-RGB-02', category: 'Periféricos', price: 65.50, stock: 3, minStock: 5 },
+            { id: '3', name: 'Mouse Inalámbrico Pro', sku: 'MOU-WL-03', category: 'Periféricos', price: 45.00, stock: 25, minStock: 8 },
+            { id: '4', name: 'Silla Ergonómica Oficina', sku: 'SIL-ERG-04', category: 'Mobiliario', price: 195.00, stock: 2, minStock: 3 },
+            { id: '5', name: 'Disco SSD NVMe 1TB', sku: 'MEM-SSD-05', category: 'Almacenamiento', price: 89.99, stock: 18, minStock: 4 }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            initCharts();
+            tryInitFirebase();
+            refreshUI();
+        });
+
+        // Load Local Storage Data
+        function loadLocalData() {
+            const storedProducts = localStorage.getItem('inventory_products');
+            const storedMovements = localStorage.getItem('inventory_movements');
+
+            products = storedProducts ? JSON.parse(storedProducts) : [...defaultProducts];
+            movements = storedMovements ? JSON.parse(storedMovements) : [
+                { id: 'm1', date: new Date().toLocaleString(), product: 'Teclado Mecánico RGB', type: 'Salida', qty: 1, note: 'Venta rápida' }
+            ];
+
+            if (!storedProducts) saveLocalData();
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('inventory_products', JSON.stringify(products));
+            localStorage.setItem('inventory_movements', JSON.stringify(movements));
+        }
+
+        async function tryInitFirebase() {
+            const savedConfig = localStorage.getItem('firebase_config_custom');
+            if (!savedConfig) return;
+
+            try {
+                const config = JSON.parse(savedConfig);
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+
+                const app = initializeApp(config);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                await signInAnonymously(auth);
+
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
+
+                // Realtime synchronization
+                onSnapshot(colRef, (snapshot) => {
+                    if (!snapshot.empty) {
+                        products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        saveLocalData();
+                        refreshUI();
+                    }
+                }, (err) => console.error("Error en Firebase Listener:", err));
+
+                isFirebaseConnected = true;
+                updateSyncBadge(true);
+            } catch (err) {
+                console.warn("Firebase no conectado:", err);
+                updateSyncBadge(false);
+            }
+        }
+
+        function updateSyncBadge(connected) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            if (connected) {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse';
+                text.innerText = 'Firebase En Vivo';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400 mr-2';
+                text.innerText = 'Modo Local (Offline)';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2';
+            });
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.className = 'tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm';
+
+            if (tab === 'dashboard') updateChart();
+        }
+
+        function refreshUI() {
+            updateDashboardKPIs();
+            renderProductsTable();
+            renderMovementsTable();
+            updateCategoriesDatalist();
+            updateChart();
+        }
+
+        function updateDashboardKPIs() {
+            const totalProducts = products.length;
+            const totalValue = products.reduce((acc, item) => acc + (item.price * item.stock), 0);
+            const lowStockItems = products.filter(p => p.stock <= p.minStock);
+            const categories = [...new Set(products.map(p => p.category))];
+
+            document.getElementById('kpi-total-products').innerText = totalProducts;
+            document.getElementById('kpi-total-value').innerText = `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('kpi-low-stock').innerText = lowStockItems.length;
+            document.getElementById('kpi-total-categories').innerText = categories.length;
+
+            // Low Stock Alert Box
+            const lowStockList = document.getElementById('lowStockList');
+            document.getElementById('lowStockBadge').innerText = lowStockItems.length;
+
+            if (lowStockItems.length === 0) {
+                lowStockList.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs"><i class="fa-solid fa-circle-check text-emerald-500 text-2xl mb-2 block"></i> Todo el inventario se encuentra con suficiente stock.</div>`;
+            } else {
+                lowStockList.innerHTML = lowStockItems.map(p => `
+                    <div class="p-3 mb-2 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-xs text-amber-950">${p.name}</p>
+                            <p class="text-[10px] text-amber-700">SKU: ${p.sku} | Mín: ${p.minStock}</p>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 bg-amber-200 text-amber-900 rounded">
+                            ${p.stock} un.
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function initCharts() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Unidades en Stock',
+                        data: [],
+                        backgroundColor: '#0284c7',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+            const categoryTotals = {};
+            products.forEach(p => {
+                categoryTotals[p.category] = (categoryTotals[p.category] || 0) + Number(p.stock);
+            });
+
+            chartInstance.data.labels = Object.keys(categoryTotals);
+            chartInstance.data.datasets[0].data = Object.values(categoryTotals);
+            chartInstance.update();
+        }
+
+        function renderProductsTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCategory = document.getElementById('categoryFilter').value;
+
+            let filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || p.sku.toLowerCase().includes(searchTerm);
+                const matchesCategory = selectedCategory === 'ALL' || p.category === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            // Sorting
+            filtered.sort((a, b) => {
+                let valA = a[currentSortField];
+                let valB = b[currentSortField];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                
+                if (valA < valB) return currentSortAsc ? -1 : 1;
+                if (valA > valB) return currentSortAsc ? 1 : -1;
+                return 0;
+            });
+
+            const tbody = document.getElementById('productsTableBody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No se encontraron productos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => {
+                const isLow = p.stock <= p.minStock;
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-3 sm:p-4 font-mono text-xs font-semibold text-slate-600">${p.sku}</td>
+                        <td class="p-3 sm:p-4 font-medium text-slate-800">${p.name}</td>
+                        <td class="p-3 sm:p-4"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">${p.category}</span></td>
+                        <td class="p-3 sm:p-4 text-right font-semibold text-slate-700">$${Number(p.price).toFixed(2)}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">
+                                ${p.stock} ${isLow ? '<i class="fa-solid fa-triangle-exclamation ml-1"></i>' : ''}
+                            </span>
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <div class="inline-flex items-center space-x-1 bg-slate-100 rounded-lg p-1 border">
+                                <button onclick="adjustStock('${p.id}', -1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center shadow-xs font-bold text-xs">-</button>
+                                <button onclick="adjustStock('${p.id}', 1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center shadow-xs font-bold text-xs">+</button>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-right space-x-2">
+                            <button onclick="editProduct('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-slate-500 hover:text-rose-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleSort(field) {
+            if (currentSortField === field) {
+                currentSortAsc = !currentSortAsc;
+            } else {
+                currentSortField = field;
+                currentSortAsc = true;
+            }
+            renderProductsTable();
+        }
+
+        function updateCategoriesDatalist() {
+            const categories = [...new Set(products.map(p => p.category))];
+            
+            // Datalist
+            const datalist = document.getElementById('categorySuggestions');
+            datalist.innerHTML = categories.map(c => `<option value="${c}">`).join('');
+
+            // Filter dropdown
+            const filter = document.getElementById('categoryFilter');
+            const currentVal = filter.value;
+            filter.innerHTML = `<option value="ALL">Todas las Categorías</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            filter.value = currentVal;
+        }
+
+        async function adjustStock(id, amount) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            const oldStock = prod.stock;
+            const newStock = Math.max(0, prod.stock + amount);
+            if (oldStock === newStock) return;
+
+            prod.stock = newStock;
+            
+            // Add movement log
+            logMovement(prod.name, amount > 0 ? 'Entrada (+)' : 'Salida (-)', Math.abs(amount), `Ajuste rápido desde tabla`);
+
+            saveLocalData();
+            refreshUI();
+
+            if (isFirebaseConnected && db) {
+                try {
+                    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), { stock: newStock });
+                } catch (e) { console.error("Error al actualizar Firebase:", e); }
+            }
+        }
+
+        function openProductModal(prod = null) {
+            const form = document.getElementById('productForm');
+            form.reset();
+
+            if (prod) {
+                document.getElementById('modalTitle').innerText = 'Editar Producto';
+                document.getElementById('productId').value = prod.id;
+                document.getElementById('prodName').value = prod.name;
+                document.getElementById('prodSku').value = prod.sku;
+                document.getElementById('prodCategory').value = prod.category;
+                document.getElementById('prodPrice').value = prod.price;
+                document.getElementById('prodStock').value = prod.stock;
+                document.getElementById('prodMinStock').value = prod.minStock;
+            } else {
+                document.getElementById('modalTitle').innerText = 'Nuevo Producto';
+                document.getElementById('productId').value = '';
+            }
+
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function editProduct(id) {
+            const prod = products.find(p => p.id === id);
+            if (prod) openProductModal(prod);
+        }
+
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('productId').value || Date.now().toString();
+            const isEdit = !!document.getElementById('productId').value;
+
+            const productData = {
+                id,
+                name: document.getElementById('prodName').value,
+                sku: document.getElementById('prodSku').value,
+                category: document.getElementById('prodCategory').value,
+                price: parseFloat(document.getElementById('prodPrice').value),
+                stock: parseInt(document.getElementById('prodStock').value),
+                minStock: parseInt(document.getElementById('prodMinStock').value)
+            };
+
+            if (isEdit) {
+                const idx = products.findIndex(p => p.id === id);
+                if (idx !== -1) products[idx] = productData;
+                logMovement(productData.name, 'Modificación', 0, 'Datos actualizados');
+            } else {
+                products.push(productData);
+                logMovement(productData.name, 'Creación', productData.stock, 'Nuevo producto creado');
+            }
+
+            saveLocalData();
+            refreshUI();
+            closeProductModal();
+
+            if (isFirebaseConnected && db) {
+                try {
+                    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), productData);
+                } catch (e) { console.error("Error guardando en Firebase:", e); }
+            }
+        }
+
+        async function deleteProduct(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            products = products.filter(p => p.id !== id);
+            logMovement(prod.name, 'Eliminación', prod.stock, 'Producto eliminado');
+            
+            saveLocalData();
+            refreshUI();
+
+            if (isFirebaseConnected && db) {
+                try {
+                    const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id));
+                } catch (e) { console.error("Error borrando de Firebase:", e); }
+            }
+        }
+
+        function logMovement(productName, type, qty, note) {
+            movements.unshift({
+                id: Date.now().toString(),
+                date: new Date().toLocaleString(),
+                product: productName,
+                type,
+                qty,
+                note
+            });
+            saveLocalData();
+        }
+
+        function renderMovementsTable() {
+            const tbody = document.getElementById('movementsTableBody');
+            if (movements.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">Sin movimientos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = movements.map(m => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 text-xs text-slate-500">${m.date}</td>
+                    <td class="p-3 font-medium text-slate-800">${m.product}</td>
+                    <td class="p-3">
+                        <span class="text-xs px-2 py-0.5 rounded font-semibold ${
+                            m.type.includes('Entrada') ? 'bg-emerald-100 text-emerald-800' :
+                            m.type.includes('Salida') ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
+                        }">${m.type}</span>
+                    </td>
+                    <td class="p-3 text-right font-bold text-slate-700">${m.qty}</td>
+                    <td class="p-3 text-xs text-slate-500">${m.note}</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearMovementsLog() {
+            movements = [];
+            saveLocalData();
+            renderMovementsTable();
+        }
+
+        function openConfigModal() {
+            document.getElementById('configModal').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+        }
+
+        function saveFirebaseConfig() {
+            const configText = document.getElementById('firebaseConfigJson').value;
+            try {
+                JSON.parse(configText); // validate JSON
+                localStorage.setItem('firebase_config_custom', configText);
+                closeConfigModal();
+                location.reload();
+            } catch (err) {
+                alert("El JSON ingresado no es válido. Revisa la sintaxis.");
+            }
+        }
+
+        function resetFirebaseConfig() {
+            localStorage.removeItem('firebase_config_custom');
+            closeConfigModal();
+            location.reload();
+        }
+    </script>
+</body>
+</html>
