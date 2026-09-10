@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockMaster Pro - Gestión de Inventario</title>
+    <title>StockMaster Pro - PWA Inventario</title>
+    
+    <!-- PWA Primary Meta Tags -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inventario">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -12,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -32,8 +40,42 @@
                     }
                 }
             }
-        }
+        };
+
+        // Inject Dynamic Web App Manifest via Data URI
+        (function injectManifest() {
+            const manifestObj = {
+                name: "StockMaster Pro - Inventario",
+                short_name: "Inventario",
+                description: "Sistema completo de gestión de inventarios offline y en la nube",
+                start_url: "./",
+                display: "standalone",
+                background_color: "#f8fafc",
+                theme_color: "#0f172a",
+                icons: [
+                    {
+                        src: "https://cdn-icons-png.flaticon.com/512/2897/2897785.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    },
+                    {
+                        src: "https://cdn-icons-png.flaticon.com/512/2897/2897785.png",
+                        sizes: "512x512",
+                        type: "image/png"
+                    }
+                ]
+            };
+            const stringManifest = JSON.stringify(manifestObj);
+            const blob = new Blob([stringManifest], { type: 'application/json' });
+            const manifestURL = URL.createObjectURL(blob);
+            const linkElem = document.createElement('link');
+            linkElem.rel = 'manifest';
+            linkElem.href = manifestURL;
+            document.head.appendChild(linkElem);
+        })();
     </script>
+
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar {
@@ -55,31 +97,48 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+    <!-- Network / Offline Alert Banner -->
+    <div id="networkStatusBanner" class="hidden bg-amber-500 text-slate-900 px-4 py-2 text-center text-xs font-bold transition-all flex items-center justify-center gap-2">
+        <i class="fa-solid fa-wifi"></i>
+        <span>Modo Sin Conexión (PWA Offline) - Las modificaciones se guardarán en tu dispositivo.</span>
+    </div>
+
     <!-- Top Navigation -->
     <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo & Title -->
                 <div class="flex items-center space-x-3">
-                    <div class="bg-brand-500 p-2 rounded-lg text-white">
+                    <div class="bg-brand-500 p-2 rounded-xl text-white shadow-md">
                         <i class="fa-solid fa-boxes-stacked text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-lg leading-tight">StockMaster Pro</h1>
-                        <p class="text-xs text-slate-400">Gestión de Inventarios Avanzada</p>
+                        <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+                            StockMaster Pro 
+                            <span class="text-[10px] bg-slate-800 text-brand-500 border border-brand-500/30 font-semibold px-2 py-0.5 rounded-full">PWA</span>
+                        </h1>
+                        <p class="text-xs text-slate-400 hidden sm:block">Gestión de Inventario Offline & Cloud</p>
                     </div>
                 </div>
 
-                <!-- Action Buttons & Status -->
-                <div class="flex items-center space-x-3">
-                    <button onclick="openCategoryManagerModal()" class="text-xs sm:text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-tags text-brand-500"></i>
-                        <span class="hidden sm:inline">Gestionar</span> Categorías
+                <!-- Action Buttons, Install PWA & Status -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- PWA Install Button -->
+                    <button id="pwaInstallBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-md animate-bounce">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Instalar App</span>
                     </button>
-                    <div id="syncStatus" class="flex items-center text-xs px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+
+                    <button onclick="openCategoryManagerModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-tags text-brand-500"></i>
+                        <span class="hidden sm:inline">Categorías</span>
+                    </button>
+
+                    <div id="syncStatus" class="flex items-center text-xs px-2.5 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" id="statusDot"></span>
-                        <span id="statusText">Modo Local</span>
+                        <span id="statusText" class="hidden md:inline">Modo Local</span>
                     </div>
+
                     <button onclick="openConfigModal()" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition" title="Configurar Firebase">
                         <i class="fa-solid fa-gear text-lg"></i>
                     </button>
@@ -91,16 +150,16 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- Navigation Tabs -->
-        <div class="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1.5 shadow-sm border">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm">
+        <div class="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1.5 shadow-sm border overflow-x-auto custom-scrollbar">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex-1 min-w-[120px] py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Dashboard</span>
             </button>
-            <button onclick="switchTab('products')" id="tab-products" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+            <button onclick="switchTab('products')" id="tab-products" class="tab-btn flex-1 min-w-[120px] py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-list-check"></i>
                 <span>Inventario</span>
             </button>
-            <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+            <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn flex-1 min-w-[120px] py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span>Historial Global</span>
             </button>
@@ -110,7 +169,6 @@
         <div id="view-dashboard" class="space-y-6">
             <!-- Summary KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Card 1 -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="p-3 bg-blue-50 text-brand-600 rounded-xl">
                         <i class="fa-solid fa-box text-2xl"></i>
@@ -120,17 +178,17 @@
                         <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-products">0</h3>
                     </div>
                 </div>
-                <!-- Card 2 -->
+
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
                         <i class="fa-solid fa-sack-dollar text-2xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase">Valor del Inventario</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Valor Inventario</p>
                         <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-value">$0.00</h3>
                     </div>
                 </div>
-                <!-- Card 3 -->
+
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
                         <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
@@ -140,21 +198,20 @@
                         <h3 class="text-2xl font-bold text-slate-800" id="kpi-low-stock">0</h3>
                     </div>
                 </div>
-                <!-- Card 4 -->
+
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
                         <i class="fa-solid fa-arrow-right-arrow-left text-2xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Movimientos</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Movimientos</p>
                         <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-movements">0</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Dashboard Charts & Low Stock Alerts Grid -->
+            <!-- Charts & Alert Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Stock Level Chart -->
                 <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-chart-column text-brand-500"></i> Stock por Categoría
@@ -164,44 +221,62 @@
                     </div>
                 </div>
 
-                <!-- Alert Panel for Low Stock -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-bell text-amber-500"></i> Alertas de Stock Bajo
+                            <i class="fa-solid fa-bell text-amber-500"></i> Alertas de Stock
                         </h3>
                         <span id="lowStockBadge" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
                     </div>
-                    <div class="flex-1 overflow-y-auto max-h-64 custom-scrollbar pr-1" id="lowStockList">
-                        <!-- Filled dynamically -->
-                    </div>
+                    <div class="flex-1 overflow-y-auto max-h-64 custom-scrollbar pr-1" id="lowStockList"></div>
                 </div>
             </div>
         </div>
 
         <!-- VIEW: PRODUCTS MANAGEMENT -->
         <div id="view-products" class="hidden space-y-6">
-            <!-- Top Controls Bar -->
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-                <!-- Search & Filters -->
-                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
-                    <div class="relative flex-1">
+            <!-- Top Search and Filter Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Search input -->
+                    <div class="relative md:col-span-2">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="searchInput" oninput="renderProductsTable()" placeholder="Buscar por Nombre o SKU..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
+
+                    <!-- Category Filter -->
                     <select id="categoryFilter" onchange="renderProductsTable()" class="py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
                         <option value="ALL">Todas las Categorías</option>
                     </select>
+
+                    <!-- Stock Status Filter -->
+                    <select id="statusFilter" onchange="renderProductsTable()" class="py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                        <option value="ALL">Todos los Estados</option>
+                        <option value="NORMAL">Stock Normal</option>
+                        <option value="LOW">Stock Bajo (⚠️)</option>
+                        <option value="OUT">Sin Stock (❌)</option>
+                    </select>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button onclick="openCategoryManagerModal()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 border border-slate-300 transition">
-                        <i class="fa-solid fa-tags text-slate-500"></i> Categorías
-                    </button>
-                    <button onclick="openProductModal()" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 shadow transition">
-                        <i class="fa-solid fa-plus"></i> Nuevo Producto
-                    </button>
+                <!-- Export & Action Buttons -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportData('csv')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1.5 transition border border-slate-300">
+                            <i class="fa-solid fa-file-csv text-emerald-600"></i> Exportar CSV
+                        </button>
+                        <button onclick="exportData('json')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1.5 transition border border-slate-300">
+                            <i class="fa-solid fa-file-code text-brand-600"></i> Exportar JSON
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="openCategoryManagerModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium text-xs flex items-center gap-2 border border-slate-300 transition">
+                            <i class="fa-solid fa-tags text-slate-500"></i> Categorías
+                        </button>
+                        <button onclick="openProductModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-xs sm:text-sm flex items-center gap-2 shadow transition">
+                            <i class="fa-solid fa-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -211,20 +286,18 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
                             <tr>
-                                <th class="p-3 sm:p-4 text-center">Imagen</th>
-                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('sku')">SKU <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
-                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('name')">Producto <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
-                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('category')">Categoría <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
-                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition text-right" onclick="toggleSort('price')">Precio <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
-                                <th class="p-3 sm:p-4 text-center">Stock</th>
-                                <th class="p-3 sm:p-4 text-center">Entradas / Salidas</th>
-                                <th class="p-3 sm:p-4 text-center">Ajuste Rápido</th>
-                                <th class="p-3 sm:p-4 text-right">Acciones</th>
+                                <th class="p-3 text-center">Imagen</th>
+                                <th class="p-3 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('sku')">SKU <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('name')">Producto <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('category')">Categoría <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 cursor-pointer hover:bg-slate-200 transition text-right" onclick="toggleSort('price')">Precio <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 text-center">Stock</th>
+                                <th class="p-3 text-center">Entradas / Salidas</th>
+                                <th class="p-3 text-center">Ajuste Rápido</th>
+                                <th class="p-3 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="productsTableBody" class="divide-y divide-slate-100">
-                            <!-- Filled dynamically -->
-                        </tbody>
+                        <tbody id="productsTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -252,9 +325,7 @@
                                 <th class="p-3">Detalle / Nota</th>
                             </tr>
                         </thead>
-                        <tbody id="movementsTableBody" class="divide-y divide-slate-100">
-                            <!-- Filled dynamically -->
-                        </tbody>
+                        <tbody id="movementsTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -288,18 +359,13 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría</label>
                         <select id="prodCategorySelect" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
-                            <!-- Options injected dynamically -->
                         </select>
                     </div>
                 </div>
 
-                <!-- Image URL Input & Preview -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL de la Imagen (Opcional)</label>
-                    <div class="flex gap-2">
-                        <input type="url" id="prodImageUrl" oninput="previewImageInput()" placeholder="https://ejemplo.com/imagen.jpg" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                    <!-- Image Preview -->
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL de Imagen (Opcional)</label>
+                    <input type="url" id="prodImageUrl" oninput="previewImageInput()" placeholder="https://ejemplo.com/imagen.jpg" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
                     <div class="mt-2 flex items-center gap-3 p-2 border border-slate-200 rounded-lg bg-slate-50">
                         <img id="modalImgPreview" src="https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen" class="w-12 h-12 object-cover rounded-lg border border-slate-300 bg-white" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen'">
                         <span class="text-xs text-slate-500">Vista previa de la imagen del producto</span>
@@ -341,7 +407,6 @@
                 </button>
             </div>
 
-            <!-- Form to Add Category -->
             <form onsubmit="handleAddCategory(event)" class="flex gap-2 mb-4">
                 <input type="text" id="newCatName" required placeholder="Nueva Categoría..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
                 <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow">
@@ -349,10 +414,7 @@
                 </button>
             </form>
 
-            <!-- List of Categories -->
-            <div class="border rounded-xl divide-y max-h-60 overflow-y-auto custom-scrollbar" id="categoryManagerList">
-                <!-- Filled dynamically -->
-            </div>
+            <div class="border rounded-xl divide-y max-h-60 overflow-y-auto custom-scrollbar" id="categoryManagerList"></div>
 
             <div class="mt-4 pt-3 text-right border-t">
                 <button onclick="closeCategoryManagerModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Cerrar</button>
@@ -360,7 +422,7 @@
         </div>
     </div>
 
-    <!-- MODAL: PRODUCT DETAIL & INDIVIDUAL MOVEMENTS HISTORY -->
+    <!-- MODAL: PRODUCT DETAIL & MOVEMENTS HISTORY -->
     <div id="productDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-start mb-4 border-b pb-3">
@@ -376,7 +438,6 @@
                 </button>
             </div>
 
-            <!-- Stats Summary Cards -->
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <div class="p-3 bg-slate-50 rounded-xl border text-center">
                     <p class="text-[11px] font-semibold text-slate-500 uppercase">Stock Actual</p>
@@ -392,9 +453,8 @@
                 </div>
             </div>
 
-            <!-- Product Movement Logs -->
             <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Historial de Movimientos de este Producto
+                <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Historial de Movimientos
             </h4>
             <div class="border rounded-xl overflow-hidden">
                 <table class="w-full text-left text-xs">
@@ -406,9 +466,7 @@
                             <th class="p-2.5">Detalle</th>
                         </tr>
                     </thead>
-                    <tbody id="detailMovementsTableBody" class="divide-y divide-slate-100">
-                        <!-- Filled dynamically -->
-                    </tbody>
+                    <tbody id="detailMovementsTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
 
@@ -429,7 +487,7 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <p class="text-xs text-slate-500 mb-4">Pega tu configuración de Firebase (objeto JSON o variables) para activar la sincronización en la nube en tiempo real.</p>
+            <p class="text-xs text-slate-500 mb-4">Ingresa tu configuración de Firebase para sincronizar datos en tiempo real entre múltiples dispositivos.</p>
 
             <div class="space-y-3 text-xs">
                 <div>
@@ -456,7 +514,95 @@
     </div>
 
     <script class="script">
-        // Global App State
+        // Register Inline Service Worker for PWA Offline Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'stockmaster-pwa-v1';
+                    const ASSETS = [
+                        './',
+                        'https://cdn.tailwindcss.com',
+                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                        'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+                        'https://cdn.jsdelivr.net/npm/chart.js'
+                    ];
+
+                    self.addEventListener('install', (event) => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+                        );
+                    });
+
+                    self.addEventListener('activate', (event) => {
+                        event.waitUntil(
+                            caches.keys().then((keys) => {
+                                return Promise.all(
+                                    keys.map((key) => {
+                                        if (key !== CACHE_NAME) return caches.delete(key);
+                                    })
+                                );
+                            }).then(() => self.clients.claim())
+                        );
+                    });
+
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(
+                            caches.match(event.request).then((cachedResponse) => {
+                                if (cachedResponse) return cachedResponse;
+                                return fetch(event.request).then((networkResponse) => {
+                                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                                        return networkResponse;
+                                    }
+                                    const responseToCache = networkResponse.clone();
+                                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+                                    return networkResponse;
+                                }).catch(() => caches.match('./'));
+                            })
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl)
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+
+        // PWA Installation Prompt Logic
+        let deferredPrompt = null;
+        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaInstallBtn.classList.remove('hidden');
+        });
+
+        pwaInstallBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                pwaInstallBtn.classList.add('hidden');
+            }
+            deferredPrompt = null;
+        });
+
+        // Network Status Event Listeners
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        function updateNetworkStatus() {
+            const banner = document.getElementById('networkStatusBanner');
+            if (navigator.onLine) {
+                banner.classList.add('hidden');
+            } else {
+                banner.classList.remove('hidden');
+            }
+        }
+
         let products = [];
         let categories = ['Monitores', 'Periféricos', 'Mobiliario', 'Almacenamiento', 'Electrónica'];
         let movements = [];
@@ -464,12 +610,10 @@
         let currentSortAsc = true;
         let chartInstance = null;
 
-        // Firebase State
         let db = null;
         let auth = null;
         let isFirebaseConnected = false;
 
-        // Demo Fallback Initial Data
         const defaultProducts = [
             { id: '1', name: 'Monitor Gamer 27" 144Hz', sku: 'MON-27-01', category: 'Monitores', price: 280.00, stock: 12, minStock: 5, imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=150&auto=format&fit=crop', totalIn: 20, totalOut: 8 },
             { id: '2', name: 'Teclado Mecánico RGB', sku: 'TEC-RGB-02', category: 'Periféricos', price: 65.50, stock: 3, minStock: 5, imageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=150&auto=format&fit=crop', totalIn: 10, totalOut: 7 },
@@ -479,13 +623,13 @@
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
+            updateNetworkStatus();
             loadLocalData();
             initCharts();
             tryInitFirebase();
             refreshUI();
         });
 
-        // Load Local Storage Data
         function loadLocalData() {
             const storedProducts = localStorage.getItem('inventory_products');
             const storedCategories = localStorage.getItem('inventory_categories');
@@ -494,7 +638,7 @@
             products = storedProducts ? JSON.parse(storedProducts) : [...defaultProducts];
             categories = storedCategories ? JSON.parse(storedCategories) : categories;
             movements = storedMovements ? JSON.parse(storedMovements) : [
-                { id: 'm1', productId: '2', date: new Date().toLocaleString(), product: 'Teclado Mecánico RGB', type: 'Salida (-)', qty: 1, note: 'Venta rápida' }
+                { id: 'm1', productId: '2', date: new Date().toLocaleString(), product: 'Teclado Mecánico RGB', type: 'Salida (-)', qty: 1, note: 'Venta inicial' }
             ];
 
             if (!storedProducts) saveLocalData();
@@ -521,10 +665,8 @@
                 auth = getAuth(app);
 
                 await signInAnonymously(auth);
-
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
-                
-                // Sync Products
+
                 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
                     if (!snapshot.empty) {
                         products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -533,7 +675,6 @@
                     }
                 });
 
-                // Sync Categories
                 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'categories'), (snapshot) => {
                     if (!snapshot.empty) {
                         categories = snapshot.docs.map(doc => doc.data().name);
@@ -565,12 +706,12 @@
         function switchTab(tab) {
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2';
+                btn.className = 'tab-btn flex-1 min-w-[120px] py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2';
             });
 
             document.getElementById(`view-${tab}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-${tab}`);
-            activeBtn.className = 'tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm';
+            activeBtn.className = 'tab-btn flex-1 min-w-[120px] py-2.5 px-4 text-center font-medium text-sm rounded-lg transition flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm';
 
             if (tab === 'dashboard') updateChart();
         }
@@ -593,12 +734,11 @@
             document.getElementById('kpi-low-stock').innerText = lowStockItems.length;
             document.getElementById('kpi-total-movements').innerText = movements.length;
 
-            // Low Stock Alert Box
             const lowStockList = document.getElementById('lowStockList');
             document.getElementById('lowStockBadge').innerText = lowStockItems.length;
 
             if (lowStockItems.length === 0) {
-                lowStockList.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs"><i class="fa-solid fa-circle-check text-emerald-500 text-2xl mb-2 block"></i> Todo el inventario se encuentra con suficiente stock.</div>`;
+                lowStockList.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs"><i class="fa-solid fa-circle-check text-emerald-500 text-2xl mb-2 block"></i> Todo el inventario está en nivel óptimo.</div>`;
             } else {
                 lowStockList.innerHTML = lowStockItems.map(p => `
                     <div class="p-3 mb-2 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg flex justify-between items-center">
@@ -655,14 +795,20 @@
         function renderProductsTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const selectedCategory = document.getElementById('categoryFilter').value;
+            const selectedStatus = document.getElementById('statusFilter').value;
 
             let filtered = products.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchTerm) || p.sku.toLowerCase().includes(searchTerm);
                 const matchesCategory = selectedCategory === 'ALL' || p.category === selectedCategory;
-                return matchesSearch && matchesCategory;
+                
+                let matchesStatus = true;
+                if (selectedStatus === 'LOW') matchesStatus = p.stock > 0 && p.stock <= p.minStock;
+                else if (selectedStatus === 'OUT') matchesStatus = p.stock === 0;
+                else if (selectedStatus === 'NORMAL') matchesStatus = p.stock > p.minStock;
+
+                return matchesSearch && matchesCategory && matchesStatus;
             });
 
-            // Sorting
             filtered.sort((a, b) => {
                 let valA = a[currentSortField] || '';
                 let valB = b[currentSortField] || '';
@@ -682,10 +828,21 @@
             }
 
             tbody.innerHTML = filtered.map(p => {
-                const isLow = p.stock <= p.minStock;
+                const isLow = p.stock > 0 && p.stock <= p.minStock;
+                const isOut = p.stock === 0;
                 const img = p.imageUrl || 'https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen';
                 const totalIn = p.totalIn || 0;
                 const totalOut = p.totalOut || 0;
+
+                let badgeStyle = 'bg-emerald-100 text-emerald-800';
+                let statusLabel = p.stock;
+                if (isOut) {
+                    badgeStyle = 'bg-rose-100 text-rose-800 border border-rose-300';
+                    statusLabel = 'Agotado (0)';
+                } else if (isLow) {
+                    badgeStyle = 'bg-amber-100 text-amber-800 border border-amber-300';
+                    statusLabel = `${p.stock} ⚠️`;
+                }
 
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
@@ -697,8 +854,8 @@
                         <td class="p-3"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">${p.category}</span></td>
                         <td class="p-3 text-right font-semibold text-slate-700">$${Number(p.price).toFixed(2)}</td>
                         <td class="p-3 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">
-                                ${p.stock} ${isLow ? '<i class="fa-solid fa-triangle-exclamation ml-1"></i>' : ''}
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeStyle}">
+                                ${statusLabel}
                             </span>
                         </td>
                         <td class="p-3 text-center text-xs">
@@ -712,7 +869,7 @@
                             </div>
                         </td>
                         <td class="p-3 text-right space-x-2">
-                            <button onclick="openProductDetailModal('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Ver Historial y Detalles"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="openProductDetailModal('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Detalles"><i class="fa-solid fa-eye"></i></button>
                             <button onclick="editProduct('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button onclick="deleteProduct('${p.id}')" class="text-slate-500 hover:text-rose-600 p-1" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
@@ -732,13 +889,11 @@
         }
 
         function updateCategoryDropdowns() {
-            // Select in Filter
             const filter = document.getElementById('categoryFilter');
             const currentVal = filter.value;
             filter.innerHTML = `<option value="ALL">Todas las Categorías</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
             filter.value = currentVal;
 
-            // Select in Form Modal
             const modalSelect = document.getElementById('prodCategorySelect');
             modalSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
         }
@@ -761,8 +916,7 @@
                 prod.totalOut = (prod.totalOut || 0) + delta;
             }
             
-            // Add movement log
-            logMovement(prod.id, prod.name, isEntry ? 'Entrada (+)' : 'Salida (-)', delta, `Ajuste rápido desde tabla`);
+            logMovement(prod.id, prod.name, isEntry ? 'Entrada (+)' : 'Salida (-)', delta, `Ajuste rápido de stock`);
 
             saveLocalData();
             refreshUI();
@@ -841,7 +995,7 @@
             if (isEdit) {
                 const idx = products.findIndex(p => p.id === id);
                 if (idx !== -1) products[idx] = productData;
-                logMovement(productData.id, productData.name, 'Modificación', 0, 'Datos o imagen actualizados');
+                logMovement(productData.id, productData.name, 'Modificación', 0, 'Producto actualizado');
             } else {
                 products.push(productData);
                 logMovement(productData.id, productData.name, 'Creación', productData.stock, 'Nuevo producto creado');
@@ -895,7 +1049,7 @@
                 return;
             }
 
-            list.innerHTML = categories.map((cat, idx) => `
+            list.innerHTML = categories.map((cat) => `
                 <div class="p-3 flex items-center justify-between bg-white hover:bg-slate-50 transition">
                     <span class="text-sm font-medium text-slate-700">${cat}</span>
                     <div class="flex items-center gap-1">
@@ -928,7 +1082,6 @@
                 const idx = categories.indexOf(oldName);
                 if (idx !== -1) categories[idx] = trimmed;
 
-                // Update products assigned to this category
                 products.forEach(p => {
                     if (p.category === oldName) p.category = trimmed;
                 });
@@ -947,7 +1100,6 @@
             }
 
             categories = categories.filter(c => c !== catName);
-            // Reassign orphaned products to the first available category
             const fallback = categories[0];
             products.forEach(p => {
                 if (p.category === catName) p.category = fallback;
@@ -964,11 +1116,44 @@
                 try {
                     const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
-                    
                     for (let cat of categories) {
                         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', cat), { name: cat });
                     }
                 } catch (e) { console.error("Error sincronizando categorías:", e); }
+            }
+        }
+
+        // Export Functionality (CSV & JSON)
+        function exportData(format) {
+            if (format === 'json') {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(products, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `inventario_${new Date().toISOString().slice(0,10)}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            } else if (format === 'csv') {
+                const headers = ["ID", "SKU", "Nombre", "Categoria", "Precio", "Stock", "StockMinimo", "TotalEntradas", "TotalSalidas"];
+                const rows = products.map(p => [
+                    p.id,
+                    `"${p.sku}"`,
+                    `"${p.name}"`,
+                    `"${p.category}"`,
+                    p.price,
+                    p.stock,
+                    p.minStock,
+                    p.totalIn || 0,
+                    p.totalOut || 0
+                ]);
+                const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `inventario_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
             }
         }
 
@@ -984,7 +1169,6 @@
             document.getElementById('detailTotalIn').innerText = prod.totalIn || 0;
             document.getElementById('detailTotalOut').innerText = prod.totalOut || 0;
 
-            // Product specific movements
             const prodMovements = movements.filter(m => m.productId === id);
             const tbody = document.getElementById('detailMovementsTableBody');
 
