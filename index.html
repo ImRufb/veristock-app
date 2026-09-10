@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Profesional de Gestión de Inventario</title>
+    <title>StockMaster Pro - Gestión de Inventario</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js for Dashboard Visuals -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
@@ -66,15 +66,19 @@
                     </div>
                     <div>
                         <h1 class="font-bold text-lg leading-tight">StockMaster Pro</h1>
-                        <p class="text-xs text-slate-400">Gestión e Inventarios</p>
+                        <p class="text-xs text-slate-400">Gestión de Inventarios Avanzada</p>
                     </div>
                 </div>
 
-                <!-- Status & Sync Badge -->
+                <!-- Action Buttons & Status -->
                 <div class="flex items-center space-x-3">
+                    <button onclick="openCategoryManagerModal()" class="text-xs sm:text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-tags text-brand-500"></i>
+                        <span class="hidden sm:inline">Gestionar</span> Categorías
+                    </button>
                     <div id="syncStatus" class="flex items-center text-xs px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" id="statusDot"></span>
-                        <span id="statusText">Modo Local / Sincronizado</span>
+                        <span id="statusText">Modo Local</span>
                     </div>
                     <button onclick="openConfigModal()" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition" title="Configurar Firebase">
                         <i class="fa-solid fa-gear text-lg"></i>
@@ -98,7 +102,7 @@
             </button>
             <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn flex-1 py-2.5 px-4 text-center font-medium text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Historial de Movimientos</span>
+                <span>Historial Global</span>
             </button>
         </div>
 
@@ -139,11 +143,11 @@
                 <!-- Card 4 -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                        <i class="fa-solid fa-tags text-2xl"></i>
+                        <i class="fa-solid fa-arrow-right-arrow-left text-2xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase">Categorías</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-categories">0</h3>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Movimientos</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-total-movements">0</h3>
                     </div>
                 </div>
             </div>
@@ -190,10 +194,15 @@
                     </select>
                 </div>
 
-                <!-- Action Button -->
-                <button onclick="openProductModal()" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 shadow transition">
-                    <i class="fa-solid fa-plus"></i> Nuevo Producto
-                </button>
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="openCategoryManagerModal()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 border border-slate-300 transition">
+                        <i class="fa-solid fa-tags text-slate-500"></i> Categorías
+                    </button>
+                    <button onclick="openProductModal()" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 shadow transition">
+                        <i class="fa-solid fa-plus"></i> Nuevo Producto
+                    </button>
+                </div>
             </div>
 
             <!-- Products Table Card -->
@@ -202,11 +211,13 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
                             <tr>
-                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('sku')">SKU / Código <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
+                                <th class="p-3 sm:p-4 text-center">Imagen</th>
+                                <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('sku')">SKU <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
                                 <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('name')">Producto <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
                                 <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition" onclick="toggleSort('category')">Categoría <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
                                 <th class="p-3 sm:p-4 cursor-pointer hover:bg-slate-200 transition text-right" onclick="toggleSort('price')">Precio <i class="fa-solid fa-sort text-xs ml-1 opacity-50"></i></th>
                                 <th class="p-3 sm:p-4 text-center">Stock</th>
+                                <th class="p-3 sm:p-4 text-center">Entradas / Salidas</th>
                                 <th class="p-3 sm:p-4 text-center">Ajuste Rápido</th>
                                 <th class="p-3 sm:p-4 text-right">Acciones</th>
                             </tr>
@@ -224,7 +235,7 @@
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-list-ol text-brand-500"></i> Registro de Actividades y Movimientos
+                        <i class="fa-solid fa-list-ol text-brand-500"></i> Registro Global de Actividades
                     </h3>
                     <button onclick="clearMovementsLog()" class="text-xs text-rose-600 hover:text-rose-800 border border-rose-200 px-3 py-1 rounded hover:bg-rose-50 transition">
                         Limpiar Historial
@@ -253,8 +264,8 @@
 
     <!-- MODAL: CREATE / EDIT PRODUCT -->
     <div id="productModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in duration-150">
-            <div class="flex justify-between items-center mb-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
                 <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Nuevo Producto</h3>
                 <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="fa-solid fa-xmark"></i>
@@ -269,15 +280,29 @@
                     <input type="text" id="prodName" required placeholder="Ej: Laptop Lenovo ThinkPad" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">SKU / Código</label>
                         <input type="text" id="prodSku" required placeholder="SKU-1001" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría</label>
-                        <input type="text" id="prodCategory" required placeholder="Ej: Electrónica" list="categorySuggestions" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                        <datalist id="categorySuggestions"></datalist>
+                        <select id="prodCategorySelect" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                            <!-- Options injected dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Image URL Input & Preview -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL de la Imagen (Opcional)</label>
+                    <div class="flex gap-2">
+                        <input type="url" id="prodImageUrl" oninput="previewImageInput()" placeholder="https://ejemplo.com/imagen.jpg" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <!-- Image Preview -->
+                    <div class="mt-2 flex items-center gap-3 p-2 border border-slate-200 rounded-lg bg-slate-50">
+                        <img id="modalImgPreview" src="https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen" class="w-12 h-12 object-cover rounded-lg border border-slate-300 bg-white" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen'">
+                        <span class="text-xs text-slate-500">Vista previa de la imagen del producto</span>
                     </div>
                 </div>
 
@@ -304,6 +329,95 @@
         </div>
     </div>
 
+    <!-- MODAL: CATEGORY MANAGER -->
+    <div id="categoryManagerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-tags text-brand-500"></i> Gestión de Categorías
+                </h3>
+                <button onclick="closeCategoryManagerModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Form to Add Category -->
+            <form onsubmit="handleAddCategory(event)" class="flex gap-2 mb-4">
+                <input type="text" id="newCatName" required placeholder="Nueva Categoría..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow">
+                    <i class="fa-solid fa-plus"></i> Agregar
+                </button>
+            </form>
+
+            <!-- List of Categories -->
+            <div class="border rounded-xl divide-y max-h-60 overflow-y-auto custom-scrollbar" id="categoryManagerList">
+                <!-- Filled dynamically -->
+            </div>
+
+            <div class="mt-4 pt-3 text-right border-t">
+                <button onclick="closeCategoryManagerModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PRODUCT DETAIL & INDIVIDUAL MOVEMENTS HISTORY -->
+    <div id="productDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-start mb-4 border-b pb-3">
+                <div class="flex items-center space-x-3">
+                    <img id="detailProdImg" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-200" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen'">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800" id="detailProdName">---</h3>
+                        <p class="text-xs text-slate-500"><span id="detailProdSku">SKU</span> | Categoría: <span id="detailProdCategory" class="font-semibold text-brand-600">---</span></p>
+                    </div>
+                </div>
+                <button onclick="closeProductDetailModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Stats Summary Cards -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="p-3 bg-slate-50 rounded-xl border text-center">
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase">Stock Actual</p>
+                    <p class="text-xl font-bold text-slate-800" id="detailStock">0</p>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                    <p class="text-[11px] font-semibold text-emerald-700 uppercase"><i class="fa-solid fa-circle-arrow-down text-emerald-500 mr-1"></i> Total Entradas</p>
+                    <p class="text-xl font-bold text-emerald-800" id="detailTotalIn">0</p>
+                </div>
+                <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 text-center">
+                    <p class="text-[11px] font-semibold text-rose-700 uppercase"><i class="fa-solid fa-circle-arrow-up text-rose-500 mr-1"></i> Total Salidas</p>
+                    <p class="text-xl font-bold text-rose-800" id="detailTotalOut">0</p>
+                </div>
+            </div>
+
+            <!-- Product Movement Logs -->
+            <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Historial de Movimientos de este Producto
+            </h4>
+            <div class="border rounded-xl overflow-hidden">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 text-slate-600 font-semibold border-b">
+                        <tr>
+                            <th class="p-2.5">Fecha</th>
+                            <th class="p-2.5">Tipo</th>
+                            <th class="p-2.5 text-right">Cantidad</th>
+                            <th class="p-2.5">Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailMovementsTableBody" class="divide-y divide-slate-100">
+                        <!-- Filled dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 pt-3 text-right border-t">
+                <button onclick="closeProductDetailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: FIREBASE CONFIG -->
     <div id="configModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100">
@@ -321,12 +435,12 @@
                 <div>
                     <label class="block font-bold text-slate-600 uppercase mb-1">Configuración Firebase JSON</label>
                     <textarea id="firebaseConfigJson" rows="6" placeholder='{
-  "apiKey": "AIzaSyBQLAPk6XHoDfHP0ZetgxkBBP1_I2UCKXM",
-  "authDomain": "veristock-app.firebaseapp.com",
-  "projectId": "veristock-app",
-  "storageBucket": "veristock-app.firebasestorage.app",
-  "messagingSenderId": "970067853015",
-  "appId": "1:970067853015:web:8bbed06b11382207bdba92"
+  "apiKey": "AIzaSy...",
+  "authDomain": "tu-app.firebaseapp.com",
+  "projectId": "tu-app",
+  "storageBucket": "tu-app.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
 }' class="w-full p-3 font-mono border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
                 </div>
             </div>
@@ -344,6 +458,7 @@
     <script class="script">
         // Global App State
         let products = [];
+        let categories = ['Monitores', 'Periféricos', 'Mobiliario', 'Almacenamiento', 'Electrónica'];
         let movements = [];
         let currentSortField = 'name';
         let currentSortAsc = true;
@@ -356,11 +471,11 @@
 
         // Demo Fallback Initial Data
         const defaultProducts = [
-            { id: '1', name: 'Monitor Gamer 27" 144Hz', sku: 'MON-27-01', category: 'Monitores', price: 280.00, stock: 12, minStock: 5 },
-            { id: '2', name: 'Teclado Mecánico RGB', sku: 'TEC-RGB-02', category: 'Periféricos', price: 65.50, stock: 3, minStock: 5 },
-            { id: '3', name: 'Mouse Inalámbrico Pro', sku: 'MOU-WL-03', category: 'Periféricos', price: 45.00, stock: 25, minStock: 8 },
-            { id: '4', name: 'Silla Ergonómica Oficina', sku: 'SIL-ERG-04', category: 'Mobiliario', price: 195.00, stock: 2, minStock: 3 },
-            { id: '5', name: 'Disco SSD NVMe 1TB', sku: 'MEM-SSD-05', category: 'Almacenamiento', price: 89.99, stock: 18, minStock: 4 }
+            { id: '1', name: 'Monitor Gamer 27" 144Hz', sku: 'MON-27-01', category: 'Monitores', price: 280.00, stock: 12, minStock: 5, imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=150&auto=format&fit=crop', totalIn: 20, totalOut: 8 },
+            { id: '2', name: 'Teclado Mecánico RGB', sku: 'TEC-RGB-02', category: 'Periféricos', price: 65.50, stock: 3, minStock: 5, imageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=150&auto=format&fit=crop', totalIn: 10, totalOut: 7 },
+            { id: '3', name: 'Mouse Inalámbrico Pro', sku: 'MOU-WL-03', category: 'Periféricos', price: 45.00, stock: 25, minStock: 8, imageUrl: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=150&auto=format&fit=crop', totalIn: 30, totalOut: 5 },
+            { id: '4', name: 'Silla Ergonómica Oficina', sku: 'SIL-ERG-04', category: 'Mobiliario', price: 195.00, stock: 2, minStock: 3, imageUrl: 'https://images.unsplash.com/photo-1580481072645-022f9a6d8310?w=150&auto=format&fit=crop', totalIn: 5, totalOut: 3 },
+            { id: '5', name: 'Disco SSD NVMe 1TB', sku: 'MEM-SSD-05', category: 'Almacenamiento', price: 89.99, stock: 18, minStock: 4, imageUrl: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=150&auto=format&fit=crop', totalIn: 25, totalOut: 7 }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -373,11 +488,13 @@
         // Load Local Storage Data
         function loadLocalData() {
             const storedProducts = localStorage.getItem('inventory_products');
+            const storedCategories = localStorage.getItem('inventory_categories');
             const storedMovements = localStorage.getItem('inventory_movements');
 
             products = storedProducts ? JSON.parse(storedProducts) : [...defaultProducts];
+            categories = storedCategories ? JSON.parse(storedCategories) : categories;
             movements = storedMovements ? JSON.parse(storedMovements) : [
-                { id: 'm1', date: new Date().toLocaleString(), product: 'Teclado Mecánico RGB', type: 'Salida', qty: 1, note: 'Venta rápida' }
+                { id: 'm1', productId: '2', date: new Date().toLocaleString(), product: 'Teclado Mecánico RGB', type: 'Salida (-)', qty: 1, note: 'Venta rápida' }
             ];
 
             if (!storedProducts) saveLocalData();
@@ -385,6 +502,7 @@
 
         function saveLocalData() {
             localStorage.setItem('inventory_products', JSON.stringify(products));
+            localStorage.setItem('inventory_categories', JSON.stringify(categories));
             localStorage.setItem('inventory_movements', JSON.stringify(movements));
         }
 
@@ -395,7 +513,7 @@
             try {
                 const config = JSON.parse(savedConfig);
                 const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-                const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const { getFirestore, collection, onSnapshot } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                 const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
 
                 const app = initializeApp(config);
@@ -405,16 +523,24 @@
                 await signInAnonymously(auth);
 
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
-
-                // Realtime synchronization
-                onSnapshot(colRef, (snapshot) => {
+                
+                // Sync Products
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
                     if (!snapshot.empty) {
                         products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         saveLocalData();
                         refreshUI();
                     }
-                }, (err) => console.error("Error en Firebase Listener:", err));
+                });
+
+                // Sync Categories
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'categories'), (snapshot) => {
+                    if (!snapshot.empty) {
+                        categories = snapshot.docs.map(doc => doc.data().name);
+                        saveLocalData();
+                        refreshUI();
+                    }
+                });
 
                 isFirebaseConnected = true;
                 updateSyncBadge(true);
@@ -453,7 +579,7 @@
             updateDashboardKPIs();
             renderProductsTable();
             renderMovementsTable();
-            updateCategoriesDatalist();
+            updateCategoryDropdowns();
             updateChart();
         }
 
@@ -461,12 +587,11 @@
             const totalProducts = products.length;
             const totalValue = products.reduce((acc, item) => acc + (item.price * item.stock), 0);
             const lowStockItems = products.filter(p => p.stock <= p.minStock);
-            const categories = [...new Set(products.map(p => p.category))];
 
             document.getElementById('kpi-total-products').innerText = totalProducts;
             document.getElementById('kpi-total-value').innerText = `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             document.getElementById('kpi-low-stock').innerText = lowStockItems.length;
-            document.getElementById('kpi-total-categories').innerText = categories.length;
+            document.getElementById('kpi-total-movements').innerText = movements.length;
 
             // Low Stock Alert Box
             const lowStockList = document.getElementById('lowStockList');
@@ -517,6 +642,7 @@
         function updateChart() {
             if (!chartInstance) return;
             const categoryTotals = {};
+            categories.forEach(c => categoryTotals[c] = 0);
             products.forEach(p => {
                 categoryTotals[p.category] = (categoryTotals[p.category] || 0) + Number(p.stock);
             });
@@ -538,8 +664,8 @@
 
             // Sorting
             filtered.sort((a, b) => {
-                let valA = a[currentSortField];
-                let valB = b[currentSortField];
+                let valA = a[currentSortField] || '';
+                let valB = b[currentSortField] || '';
                 if (typeof valA === 'string') valA = valA.toLowerCase();
                 if (typeof valB === 'string') valB = valB.toLowerCase();
                 
@@ -551,32 +677,44 @@
             const tbody = document.getElementById('productsTableBody');
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No se encontraron productos registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">No se encontraron productos registrados.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map(p => {
                 const isLow = p.stock <= p.minStock;
+                const img = p.imageUrl || 'https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen';
+                const totalIn = p.totalIn || 0;
+                const totalOut = p.totalOut || 0;
+
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="p-3 sm:p-4 font-mono text-xs font-semibold text-slate-600">${p.sku}</td>
-                        <td class="p-3 sm:p-4 font-medium text-slate-800">${p.name}</td>
-                        <td class="p-3 sm:p-4"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">${p.category}</span></td>
-                        <td class="p-3 sm:p-4 text-right font-semibold text-slate-700">$${Number(p.price).toFixed(2)}</td>
-                        <td class="p-3 sm:p-4 text-center">
+                        <td class="p-3 text-center">
+                            <img src="${img}" class="w-10 h-10 object-cover rounded-lg border border-slate-200 mx-auto cursor-pointer" onclick="openProductDetailModal('${p.id}')" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen'">
+                        </td>
+                        <td class="p-3 font-mono text-xs font-semibold text-slate-600">${p.sku}</td>
+                        <td class="p-3 font-medium text-slate-800 cursor-pointer hover:text-brand-600 transition" onclick="openProductDetailModal('${p.id}')">${p.name}</td>
+                        <td class="p-3"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">${p.category}</span></td>
+                        <td class="p-3 text-right font-semibold text-slate-700">$${Number(p.price).toFixed(2)}</td>
+                        <td class="p-3 text-center">
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">
                                 ${p.stock} ${isLow ? '<i class="fa-solid fa-triangle-exclamation ml-1"></i>' : ''}
                             </span>
                         </td>
-                        <td class="p-3 sm:p-4 text-center">
+                        <td class="p-3 text-center text-xs">
+                            <span class="text-emerald-600 font-semibold cursor-pointer" onclick="openProductDetailModal('${p.id}')" title="Total Entradas">+${totalIn}</span> / 
+                            <span class="text-rose-600 font-semibold cursor-pointer" onclick="openProductDetailModal('${p.id}')" title="Total Salidas">-${totalOut}</span>
+                        </td>
+                        <td class="p-3 text-center">
                             <div class="inline-flex items-center space-x-1 bg-slate-100 rounded-lg p-1 border">
                                 <button onclick="adjustStock('${p.id}', -1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center shadow-xs font-bold text-xs">-</button>
                                 <button onclick="adjustStock('${p.id}', 1)" class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center shadow-xs font-bold text-xs">+</button>
                             </div>
                         </td>
-                        <td class="p-3 sm:p-4 text-right space-x-2">
-                            <button onclick="editProduct('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deleteProduct('${p.id}')" class="text-slate-500 hover:text-rose-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openProductDetailModal('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Ver Historial y Detalles"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="editProduct('${p.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-slate-500 hover:text-rose-600 p-1" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
                     </tr>
                 `;
@@ -593,18 +731,16 @@
             renderProductsTable();
         }
 
-        function updateCategoriesDatalist() {
-            const categories = [...new Set(products.map(p => p.category))];
-            
-            // Datalist
-            const datalist = document.getElementById('categorySuggestions');
-            datalist.innerHTML = categories.map(c => `<option value="${c}">`).join('');
-
-            // Filter dropdown
+        function updateCategoryDropdowns() {
+            // Select in Filter
             const filter = document.getElementById('categoryFilter');
             const currentVal = filter.value;
             filter.innerHTML = `<option value="ALL">Todas las Categorías</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
             filter.value = currentVal;
+
+            // Select in Form Modal
+            const modalSelect = document.getElementById('prodCategorySelect');
+            modalSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         async function adjustStock(id, amount) {
@@ -615,10 +751,18 @@
             const newStock = Math.max(0, prod.stock + amount);
             if (oldStock === newStock) return;
 
+            const isEntry = amount > 0;
+            const delta = Math.abs(amount);
+
             prod.stock = newStock;
+            if (isEntry) {
+                prod.totalIn = (prod.totalIn || 0) + delta;
+            } else {
+                prod.totalOut = (prod.totalOut || 0) + delta;
+            }
             
             // Add movement log
-            logMovement(prod.name, amount > 0 ? 'Entrada (+)' : 'Salida (-)', Math.abs(amount), `Ajuste rápido desde tabla`);
+            logMovement(prod.id, prod.name, isEntry ? 'Entrada (+)' : 'Salida (-)', delta, `Ajuste rápido desde tabla`);
 
             saveLocalData();
             refreshUI();
@@ -627,7 +771,11 @@
                 try {
                     const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), { stock: newStock });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), {
+                        stock: newStock,
+                        totalIn: prod.totalIn,
+                        totalOut: prod.totalOut
+                    });
                 } catch (e) { console.error("Error al actualizar Firebase:", e); }
             }
         }
@@ -641,20 +789,29 @@
                 document.getElementById('productId').value = prod.id;
                 document.getElementById('prodName').value = prod.name;
                 document.getElementById('prodSku').value = prod.sku;
-                document.getElementById('prodCategory').value = prod.category;
+                document.getElementById('prodCategorySelect').value = prod.category;
+                document.getElementById('prodImageUrl').value = prod.imageUrl || '';
                 document.getElementById('prodPrice').value = prod.price;
                 document.getElementById('prodStock').value = prod.stock;
                 document.getElementById('prodMinStock').value = prod.minStock;
             } else {
                 document.getElementById('modalTitle').innerText = 'Nuevo Producto';
                 document.getElementById('productId').value = '';
+                document.getElementById('prodImageUrl').value = '';
             }
 
+            previewImageInput();
             document.getElementById('productModal').classList.remove('hidden');
         }
 
         function closeProductModal() {
             document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function previewImageInput() {
+            const url = document.getElementById('prodImageUrl').value;
+            const img = document.getElementById('modalImgPreview');
+            img.src = url || 'https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen';
         }
 
         function editProduct(id) {
@@ -666,24 +823,28 @@
             e.preventDefault();
             const id = document.getElementById('productId').value || Date.now().toString();
             const isEdit = !!document.getElementById('productId').value;
+            const existing = products.find(p => p.id === id);
 
             const productData = {
                 id,
                 name: document.getElementById('prodName').value,
                 sku: document.getElementById('prodSku').value,
-                category: document.getElementById('prodCategory').value,
+                category: document.getElementById('prodCategorySelect').value,
+                imageUrl: document.getElementById('prodImageUrl').value,
                 price: parseFloat(document.getElementById('prodPrice').value),
                 stock: parseInt(document.getElementById('prodStock').value),
-                minStock: parseInt(document.getElementById('prodMinStock').value)
+                minStock: parseInt(document.getElementById('prodMinStock').value),
+                totalIn: existing ? (existing.totalIn || 0) : parseInt(document.getElementById('prodStock').value),
+                totalOut: existing ? (existing.totalOut || 0) : 0
             };
 
             if (isEdit) {
                 const idx = products.findIndex(p => p.id === id);
                 if (idx !== -1) products[idx] = productData;
-                logMovement(productData.name, 'Modificación', 0, 'Datos actualizados');
+                logMovement(productData.id, productData.name, 'Modificación', 0, 'Datos o imagen actualizados');
             } else {
                 products.push(productData);
-                logMovement(productData.name, 'Creación', productData.stock, 'Nuevo producto creado');
+                logMovement(productData.id, productData.name, 'Creación', productData.stock, 'Nuevo producto creado');
             }
 
             saveLocalData();
@@ -704,7 +865,7 @@
             if (!prod) return;
 
             products = products.filter(p => p.id !== id);
-            logMovement(prod.name, 'Eliminación', prod.stock, 'Producto eliminado');
+            logMovement(prod.id, prod.name, 'Eliminación', prod.stock, 'Producto eliminado');
             
             saveLocalData();
             refreshUI();
@@ -718,9 +879,144 @@
             }
         }
 
-        function logMovement(productName, type, qty, note) {
+        function openCategoryManagerModal() {
+            renderCategoryManagerList();
+            document.getElementById('categoryManagerModal').classList.remove('hidden');
+        }
+
+        function closeCategoryManagerModal() {
+            document.getElementById('categoryManagerModal').classList.add('hidden');
+        }
+
+        function renderCategoryManagerList() {
+            const list = document.getElementById('categoryManagerList');
+            if (categories.length === 0) {
+                list.innerHTML = `<div class="p-3 text-center text-xs text-slate-400">Sin categorías registradas.</div>`;
+                return;
+            }
+
+            list.innerHTML = categories.map((cat, idx) => `
+                <div class="p-3 flex items-center justify-between bg-white hover:bg-slate-50 transition">
+                    <span class="text-sm font-medium text-slate-700">${cat}</span>
+                    <div class="flex items-center gap-1">
+                        <button onclick="renameCategory('${cat}')" class="p-1 text-slate-400 hover:text-brand-600"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteCategory('${cat}')" class="p-1 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleAddCategory(e) {
+            e.preventDefault();
+            const input = document.getElementById('newCatName');
+            const name = input.value.trim();
+
+            if (name && !categories.includes(name)) {
+                categories.push(name);
+                input.value = '';
+                saveLocalData();
+                refreshUI();
+                renderCategoryManagerList();
+                syncCategoriesToFirebase();
+            }
+        }
+
+        function renameCategory(oldName) {
+            const newName = prompt(`Editar nombre de categoría:`, oldName);
+            if (newName && newName.trim() !== '' && newName !== oldName) {
+                const trimmed = newName.trim();
+                const idx = categories.indexOf(oldName);
+                if (idx !== -1) categories[idx] = trimmed;
+
+                // Update products assigned to this category
+                products.forEach(p => {
+                    if (p.category === oldName) p.category = trimmed;
+                });
+
+                saveLocalData();
+                refreshUI();
+                renderCategoryManagerList();
+                syncCategoriesToFirebase();
+            }
+        }
+
+        function deleteCategory(catName) {
+            if (categories.length <= 1) {
+                alert("Debe existir al menos una categoría en el sistema.");
+                return;
+            }
+
+            categories = categories.filter(c => c !== catName);
+            // Reassign orphaned products to the first available category
+            const fallback = categories[0];
+            products.forEach(p => {
+                if (p.category === catName) p.category = fallback;
+            });
+
+            saveLocalData();
+            refreshUI();
+            renderCategoryManagerList();
+            syncCategoriesToFirebase();
+        }
+
+        async function syncCategoriesToFirebase() {
+            if (isFirebaseConnected && db) {
+                try {
+                    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-inventory';
+                    
+                    for (let cat of categories) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', cat), { name: cat });
+                    }
+                } catch (e) { console.error("Error sincronizando categorías:", e); }
+            }
+        }
+
+        function openProductDetailModal(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById('detailProdImg').src = prod.imageUrl || 'https://placehold.co/100x100/e2e8f0/64748b?text=Sin+Imagen';
+            document.getElementById('detailProdName').innerText = prod.name;
+            document.getElementById('detailProdSku').innerText = `SKU: ${prod.sku}`;
+            document.getElementById('detailProdCategory').innerText = prod.category;
+            document.getElementById('detailStock').innerText = prod.stock;
+            document.getElementById('detailTotalIn').innerText = prod.totalIn || 0;
+            document.getElementById('detailTotalOut').innerText = prod.totalOut || 0;
+
+            // Product specific movements
+            const prodMovements = movements.filter(m => m.productId === id);
+            const tbody = document.getElementById('detailMovementsTableBody');
+
+            if (prodMovements.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Sin historial registrado para este producto.</td></tr>`;
+            } else {
+                tbody.innerHTML = prodMovements.map(m => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 text-slate-500">${m.date}</td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                m.type.includes('Entrada') ? 'bg-emerald-100 text-emerald-800' :
+                                m.type.includes('Salida') ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
+                            }">${m.type}</span>
+                        </td>
+                        <td class="p-2.5 text-right font-bold text-slate-700">${m.qty}</td>
+                        <td class="p-2.5 text-slate-500">${m.note}</td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('productDetailModal').classList.remove('hidden');
+        }
+
+        function closeProductDetailModal() {
+            document.getElementById('productDetailModal').classList.add('hidden');
+        }
+
+        function logMovement(productId, productName, type, qty, note) {
             movements.unshift({
                 id: Date.now().toString(),
+                productId,
                 date: new Date().toLocaleString(),
                 product: productName,
                 type,
@@ -740,7 +1036,7 @@
             tbody.innerHTML = movements.map(m => `
                 <tr class="hover:bg-slate-50">
                     <td class="p-3 text-xs text-slate-500">${m.date}</td>
-                    <td class="p-3 font-medium text-slate-800">${m.product}</td>
+                    <td class="p-3 font-medium text-slate-800 cursor-pointer hover:text-brand-600" onclick="openProductDetailModal('${m.productId}')">${m.product}</td>
                     <td class="p-3">
                         <span class="text-xs px-2 py-0.5 rounded font-semibold ${
                             m.type.includes('Entrada') ? 'bg-emerald-100 text-emerald-800' :
@@ -770,7 +1066,7 @@
         function saveFirebaseConfig() {
             const configText = document.getElementById('firebaseConfigJson').value;
             try {
-                JSON.parse(configText); // validate JSON
+                JSON.parse(configText);
                 localStorage.setItem('firebase_config_custom', configText);
                 closeConfigModal();
                 location.reload();
